@@ -1,11 +1,16 @@
 package com.dgreenhalgh.android.largemargebackground
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.app.Activity
 import android.content.res.AssetManager
 import android.media.AudioManager
 import android.media.SoundPool
 import android.os.Bundle
 import android.util.Log
+import android.view.animation.AccelerateInterpolator
+import android.widget.ImageView
+import android.widget.LinearLayout
 import org.phoenixframework.channels.Socket
 import java.io.IOException
 
@@ -13,10 +18,16 @@ import java.io.IOException
 class MainActivity : Activity() {
 
     private val TAG = "MainActivity"
-    private val SOUNDS_FOLDER = "short" // TODO: Add attributions
+    private val SOUNDS_FOLDER = "short"
 
-    lateinit var assetManager: AssetManager
-    lateinit var soundPool: SoundPool
+    private lateinit var backgroundView: LinearLayout
+    private lateinit var curtainLeftImageView: ImageView
+    private lateinit var curtainRightImageView: ImageView
+
+    private lateinit var assetManager: AssetManager
+    private lateinit var soundPool: SoundPool
+
+    private var curtainsAnimatorSet = AnimatorSet()
 
     var sounds: MutableList<Sound> = arrayListOf()
 
@@ -24,12 +35,52 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main);
 
+        backgroundView = findViewById(R.id.root) as LinearLayout
+        curtainLeftImageView = findViewById(R.id.curtain_left) as ImageView
+        curtainRightImageView = findViewById(R.id.curtain_right) as ImageView
+
+        curtainLeftImageView.setOnClickListener({
+            initAnimators()
+            curtainsAnimatorSet.start()
+        })
+
+
         var socket = connectToSocket()
         joinChannel(socket)
 
         assetManager = assets
         soundPool = SoundPool(10, AudioManager.STREAM_MUSIC, 0)
         loadShortSounds()
+    }
+
+    private fun initAnimators() {
+        var curtainLeftAnimator = initCurtainLeftAnimator()
+        var curtainRightAnimator = initCurtainRightAnimator()
+        curtainsAnimatorSet
+                .play(curtainLeftAnimator)
+                .with(curtainRightAnimator)
+    }
+
+    private fun initCurtainLeftAnimator(): ObjectAnimator {
+        var curtainLeftAnimator = ObjectAnimator
+                .ofFloat(curtainLeftImageView, "x", 0f, -1000f)
+                .setDuration(3000)
+        curtainLeftAnimator.interpolator = AccelerateInterpolator() // todo: ADI?
+        curtainLeftAnimator.start()
+
+        return curtainLeftAnimator
+    }
+
+    private fun initCurtainRightAnimator(): ObjectAnimator {
+        var curtainRightStart: Float = curtainRightImageView.left.toFloat()
+        var curtainRightEnd: Float = backgroundView.right.toFloat()
+        var curtainRightAnimator = ObjectAnimator
+                .ofFloat(curtainRightImageView, "x", curtainRightStart, curtainRightEnd)
+                .setDuration(3000)
+        curtainRightAnimator.interpolator = AccelerateInterpolator()
+        curtainRightAnimator.start()
+
+        return curtainRightAnimator
     }
 
     private fun connectToSocket(): Socket {
