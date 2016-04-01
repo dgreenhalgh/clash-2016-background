@@ -11,8 +11,16 @@ import android.util.Log
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
+import okhttp3.OkHttpClient
 import org.phoenixframework.channels.Socket
+import retrofit2.Retrofit
+import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory
+import retrofit2.converter.gson.GsonConverterFactory
+import rx.android.schedulers.AndroidSchedulers
+import rx.functions.Action1
+import rx.schedulers.Schedulers
 import java.io.IOException
+import okhttp3.logging.HttpLoggingInterceptor
 
 
 class MainActivity : Activity() {
@@ -27,6 +35,9 @@ class MainActivity : Activity() {
     private lateinit var assetManager: AssetManager
     private lateinit var soundPool: SoundPool
 
+    private lateinit var retrofit: Retrofit
+    private lateinit var gettyService: GettyService
+
     private var curtainsAnimatorSet = AnimatorSet()
 
     var sounds: MutableList<Sound> = arrayListOf()
@@ -39,11 +50,18 @@ class MainActivity : Activity() {
         curtainLeftImageView = findViewById(R.id.curtain_left) as ImageView
         curtainRightImageView = findViewById(R.id.curtain_right) as ImageView
 
+        gettyService = retrofit.create(GettyService::class.java)
+        
         curtainLeftImageView.setOnClickListener({
             initAnimators()
             curtainsAnimatorSet.start()
-        })
 
+            gettyService.listGettyImages("display_set", 1, "elephants")
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(Action1 { Log.i(TAG, "images") },
+                            Action1 { it -> Log.e(TAG, "Error downloading image metadata", it) })
+        })
 
         var socket = connectToSocket()
         joinChannel(socket)
@@ -51,6 +69,22 @@ class MainActivity : Activity() {
         assetManager = assets
         soundPool = SoundPool(10, AudioManager.STREAM_MUSIC, 0)
         loadShortSounds()
+    }
+
+    private fun initRetrofit() {
+        var interceptor = HttpLoggingInterceptor();
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
+
+        var client = OkHttpClient.Builder()
+                .addInterceptor(interceptor)
+                .build()
+
+        retrofit = Retrofit.Builder()
+                .baseUrl("https://api.gettyimages.com:443/v3/")
+                .client(client)
+                .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .build()
     }
 
     private fun initAnimators() {
@@ -94,17 +128,22 @@ class MainActivity : Activity() {
         var channel = socket.chan("largemarge:events", null)
 
         channel.join()
-                .receive("ignore", { System.out.println("IGNORE") })
-                .receive("ok", { System.out.println("JOINED with " + it.toString()) })
+                .receive("ignore", { Log.e(TAG, "IGNORE") })
+                .receive("ok", { Log.i(TAG, "JOINED with " + it.toString()) })
 
         channel.on("start", {
             playSoundsSerially()
-            System.out.println("NEW MESSAGE: " + it.toString())
+            Log.i(TAG, "NEW MESSAGE: " + it.toString())
         })
 
-        channel.onClose { System.out.println("CLOSED: " + it.toString()) }
+        channel.on("location", {
+            // TODO: fetch background image URL
+            Log.i(TAG, "NEW LOCATION" + it.toString())
+        })
 
-        channel.onError { System.out.println("ERROR: " + it) }
+        channel.onClose { Log.i(TAG, "CLOSED: " + it.toString()) }
+
+        channel.onError { Log.e(TAG, "ERROR: " + it) }
     }
 
     private fun loadShortSounds() {
