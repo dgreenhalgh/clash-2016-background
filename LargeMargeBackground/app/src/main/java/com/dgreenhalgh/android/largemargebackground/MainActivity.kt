@@ -7,6 +7,7 @@ import android.media.SoundPool
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
+import org.phoenixframework.channels.Socket
 import java.io.IOException
 
 
@@ -27,11 +28,39 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main);
 
         rootImageView = findViewById(R.id.main_image) as ImageView
-        rootImageView.setOnClickListener({ playSoundsSerially()})
+        rootImageView.setOnClickListener({ playSoundsSerially()}) // TODO remove
+
+        var socket = connectToSocket()
+        joinChannel(socket)
+
 
         assetManager = assets
         soundPool = SoundPool(10, AudioManager.STREAM_MUSIC, 0)
         loadShortSounds()
+    }
+
+    private fun connectToSocket(): Socket {
+        var socket = Socket("ws://large-marge-server.herokuapp.com/socket/websocket?vsn=1.0.0")
+        socket.connect()
+
+        return socket
+    }
+
+    private fun joinChannel(socket: Socket) {
+        var channel = socket.chan("largemarge:events", null)
+
+        channel.join()
+                .receive("ignore", { System.out.println("IGNORE") })
+                .receive("ok", { System.out.println("JOINED with " + it.toString()) })
+
+        channel.on("start", {
+            playSoundsSerially()
+            System.out.println("NEW MESSAGE: " + it.toString())
+        })
+
+        channel.onClose { System.out.println("CLOSED: " + it.toString()) }
+
+        channel.onError { System.out.println("ERROR: " + it) }
     }
 
     private fun loadShortSounds() {
