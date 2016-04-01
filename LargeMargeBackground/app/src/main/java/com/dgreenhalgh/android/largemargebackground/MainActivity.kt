@@ -6,14 +6,11 @@ import android.media.AudioManager
 import android.media.SoundPool
 import android.os.Bundle
 import android.util.Log
-import android.widget.ImageView
 import org.phoenixframework.channels.Socket
 import java.io.IOException
 
 
 class MainActivity : Activity() {
-
-    lateinit private var rootImageView: ImageView
 
     private val TAG = "MainActivity"
     private val SOUNDS_FOLDER = "short" // TODO: Add attributions
@@ -27,12 +24,8 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main);
 
-        rootImageView = findViewById(R.id.main_image) as ImageView
-        rootImageView.setOnClickListener({ playSoundsSerially()}) // TODO remove
-
         var socket = connectToSocket()
         joinChannel(socket)
-
 
         assetManager = assets
         soundPool = SoundPool(10, AudioManager.STREAM_MUSIC, 0)
