@@ -22,6 +22,7 @@ import rx.functions.Action1
 import rx.schedulers.Schedulers
 import java.io.IOException
 import okhttp3.logging.HttpLoggingInterceptor
+import org.json.JSONObject
 import rx.functions.Func1
 
 
@@ -58,20 +59,8 @@ class MainActivity : Activity() {
         gettyService = retrofit.create(GettyService::class.java)
 
         curtainLeftImageView.setOnClickListener({
-            initAnimators()
-            curtainsAnimatorSet.start()
 
-            gettyService.listGettyImages("display_set", 1, "elephants")
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .map(GettyResponse::imageList)
-                    .map { it[0] }
-                    .map { it.largestDisplaySize }
-                    .map { it.uri }
-                    .subscribe({
-                        changeBackgroundImage(it)
-                        Log.i(TAG, "images")
-                    }, { it -> Log.e(TAG, "Error downloading image metadata", it) })
+
         })
 
         var socket = connectToSocket()
@@ -98,8 +87,28 @@ class MainActivity : Activity() {
                 .build()
     }
 
+    private fun loadBackgroundImage(query: String) {
+        gettyService.listGettyImages("display_set", 1, query)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(GettyResponse::imageList)
+                .map { it[0] }
+                .map { it.largestDisplaySize }
+                .map { it.uri }
+                .subscribe({
+                    changeBackgroundImage(it)
+                    animateCurtains()
+                    Log.i(TAG, "Changing background image")
+                }, { it -> Log.e(TAG, "Error downloading image metadata", it) })
+    }
+
     private fun changeBackgroundImage(uri: String) {
         Glide.with(this).load(uri).into(backgroundImageView)
+    }
+
+    private fun animateCurtains() {
+        initAnimators()
+        curtainsAnimatorSet.start()
     }
 
     private fun initAnimators() {
@@ -152,8 +161,10 @@ class MainActivity : Activity() {
         })
 
         channel.on("location", {
-            // TODO: fetch background image URL
             Log.i(TAG, "NEW LOCATION" + it.toString())
+            var query = it.payload.get("location").toString()
+            Log.i(TAG, "LOCATION QUERY " + query)
+            loadBackgroundImage(query)
         })
 
         channel.onClose { Log.i(TAG, "CLOSED: " + it.toString()) }
