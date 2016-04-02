@@ -8,6 +8,7 @@ import android.media.AudioManager
 import android.media.SoundPool
 import android.os.Bundle
 import android.util.Log
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -21,6 +22,7 @@ import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import java.io.IOException
 import okhttp3.logging.HttpLoggingInterceptor
+import rx.Observable
 
 class MainActivity : Activity() {
 
@@ -38,7 +40,13 @@ class MainActivity : Activity() {
     private lateinit var retrofit: Retrofit
     private lateinit var gettyService: GettyService
 
-    private var curtainsAnimatorSet = AnimatorSet()
+    private lateinit var openCurtainLeftAnimator: ObjectAnimator
+    private lateinit var openCurtainRightAnimator: ObjectAnimator
+    private var openCurtainsAnimatorSet = AnimatorSet()
+
+    private lateinit var closeCurtainLeftAnimator: ObjectAnimator
+    private lateinit var closeCurtainRightAnimator: ObjectAnimator
+    private var closeCurtainsAnimatorSet = AnimatorSet()
 
     var sounds: MutableList<Sound> = arrayListOf()
 
@@ -50,6 +58,12 @@ class MainActivity : Activity() {
         backgroundImageView = findViewById(R.id.background_image) as ImageView
         curtainLeftImageView = findViewById(R.id.curtain_left) as ImageView
         curtainRightImageView = findViewById(R.id.curtain_right) as ImageView
+
+        backgroundImageView.setOnClickListener {
+            closeem() // TODO: handle on reset
+        }
+
+        initOpenAnimators()
 
         initRetrofit()
         gettyService = retrofit.create(GettyService::class.java)
@@ -88,7 +102,7 @@ class MainActivity : Activity() {
                 .map { it.uri }
                 .subscribe({
                     changeBackgroundImage(it)
-                    animateCurtains()
+                    animateCurtainsOpen()
                     Log.i(TAG, "Changing background image")
                 }, { it -> Log.e(TAG, "Error downloading image metadata", it) })
     }
@@ -97,37 +111,70 @@ class MainActivity : Activity() {
         Picasso.with(this).load(uri).into(backgroundImageView)
     }
 
-    private fun animateCurtains() {
-        initAnimators()
-        curtainsAnimatorSet.start()
+    private fun animateCurtainsOpen() {
+        openCurtainsAnimatorSet.start()
     }
 
-    private fun initAnimators() {
-        var curtainLeftAnimator = initCurtainLeftAnimator()
-        var curtainRightAnimator = initCurtainRightAnimator()
-        curtainsAnimatorSet
-                .play(curtainLeftAnimator)
-                .with(curtainRightAnimator)
+    private fun initOpenAnimators() {
+        openCurtainLeftAnimator = initOpenCurtainLeftAnimator()
+        openCurtainRightAnimator = initOpenCurtainRightAnimator()
+        openCurtainsAnimatorSet
+                .play(openCurtainLeftAnimator)
+                .with(openCurtainRightAnimator)
     }
 
-    private fun initCurtainLeftAnimator(): ObjectAnimator {
+    private fun initOpenCurtainLeftAnimator(): ObjectAnimator {
         var curtainLeftAnimator = ObjectAnimator
                 .ofFloat(curtainLeftImageView, "x", 0f, -1000f)
                 .setDuration(3000)
-        curtainLeftAnimator.interpolator = AccelerateInterpolator() // todo: ADI?
-        curtainLeftAnimator.start()
+        curtainLeftAnimator.interpolator = AccelerateDecelerateInterpolator()
 
         return curtainLeftAnimator
     }
 
-    private fun initCurtainRightAnimator(): ObjectAnimator {
+    private fun initOpenCurtainRightAnimator(): ObjectAnimator {
         var curtainRightStart: Float = curtainRightImageView.left.toFloat()
         var curtainRightEnd: Float = backgroundView.right.toFloat()
         var curtainRightAnimator = ObjectAnimator
                 .ofFloat(curtainRightImageView, "x", curtainRightStart, curtainRightEnd)
                 .setDuration(3000)
-        curtainRightAnimator.interpolator = AccelerateInterpolator()
-        curtainRightAnimator.start()
+        curtainRightAnimator.interpolator = AccelerateDecelerateInterpolator()
+
+        return curtainRightAnimator
+    }
+
+    private fun animateCurtainsClosed() {
+        initCloseAnimators()
+        closeCurtainsAnimatorSet.start()
+    }
+
+    private fun initCloseAnimators() {
+        closeCurtainLeftAnimator = initCloseCurtainLeftAnimator()
+        closeCurtainRightAnimator = initCloseCurtainRightAnimator()
+        closeCurtainsAnimatorSet
+                .play(closeCurtainLeftAnimator)
+                .with(closeCurtainRightAnimator)
+    }
+
+    private fun initCloseCurtainLeftAnimator(): ObjectAnimator {
+        var curtainLeftStart = curtainLeftImageView.left.toFloat()
+        var curtainLeftAnimator = ObjectAnimator
+                .ofFloat(curtainLeftImageView, "x", -1000f, 0f)
+                .setDuration(3000)
+
+        curtainLeftAnimator.interpolator = AccelerateDecelerateInterpolator()
+
+        return curtainLeftAnimator
+    }
+
+    private fun initCloseCurtainRightAnimator(): ObjectAnimator {
+        var curtainRightStart = curtainRightImageView.left.toFloat()
+        var curtainRightEnd = (backgroundView.right - curtainRightImageView.width).toFloat()
+        var curtainRightAnimator = ObjectAnimator
+                .ofFloat(curtainRightImageView, "x", 1600f, 800f)
+                .setDuration(3000)
+
+        curtainRightAnimator.interpolator = AccelerateDecelerateInterpolator()
 
         return curtainRightAnimator
     }
@@ -139,6 +186,14 @@ class MainActivity : Activity() {
         return socket
     }
 
+    private fun closeem() {
+        Observable.just("")
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    animateCurtainsClosed()
+        }
+    }
+
     private fun joinChannel(socket: Socket) {
         var channel = socket.chan("largemarge:events", null)
 
@@ -147,9 +202,12 @@ class MainActivity : Activity() {
                 .receive("ok", { Log.i(TAG, "JOINED with " + it.toString()) })
 
         channel.on("start", {
+            initOpenAnimators()
             playSoundsSerially()
             Log.i(TAG, "NEW MESSAGE: " + it.toString())
         })
+
+        // TODO: on restart close curtains
 
         channel.on("location", {
             Log.i(TAG, "NEW LOCATION" + it.toString())
