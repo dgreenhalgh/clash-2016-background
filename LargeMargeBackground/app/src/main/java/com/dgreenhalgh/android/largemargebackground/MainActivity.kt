@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
+import com.bumptech.glide.Glide
 import okhttp3.OkHttpClient
 import org.phoenixframework.channels.Socket
 import retrofit2.Retrofit
@@ -21,6 +22,7 @@ import rx.functions.Action1
 import rx.schedulers.Schedulers
 import java.io.IOException
 import okhttp3.logging.HttpLoggingInterceptor
+import rx.functions.Func1
 
 
 class MainActivity : Activity() {
@@ -29,6 +31,7 @@ class MainActivity : Activity() {
     private val SOUNDS_FOLDER = "short"
 
     private lateinit var backgroundView: LinearLayout
+    private lateinit var backgroundImageView: ImageView
     private lateinit var curtainLeftImageView: ImageView
     private lateinit var curtainRightImageView: ImageView
 
@@ -47,11 +50,13 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main);
 
         backgroundView = findViewById(R.id.root) as LinearLayout
+        backgroundImageView = findViewById(R.id.background_image) as ImageView
         curtainLeftImageView = findViewById(R.id.curtain_left) as ImageView
         curtainRightImageView = findViewById(R.id.curtain_right) as ImageView
 
+        initRetrofit()
         gettyService = retrofit.create(GettyService::class.java)
-        
+
         curtainLeftImageView.setOnClickListener({
             initAnimators()
             curtainsAnimatorSet.start()
@@ -59,8 +64,14 @@ class MainActivity : Activity() {
             gettyService.listGettyImages("display_set", 1, "elephants")
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(Action1 { Log.i(TAG, "images") },
-                            Action1 { it -> Log.e(TAG, "Error downloading image metadata", it) })
+                    .map(GettyResponse::imageList)
+                    .map { it[0] }
+                    .map { it.largestDisplaySize }
+                    .map { it.uri }
+                    .subscribe({
+                        changeBackgroundImage(it)
+                        Log.i(TAG, "images")
+                    }, { it -> Log.e(TAG, "Error downloading image metadata", it) })
         })
 
         var socket = connectToSocket()
@@ -85,6 +96,10 @@ class MainActivity : Activity() {
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                 .build()
+    }
+
+    private fun changeBackgroundImage(uri: String) {
+        Glide.with(this).load(uri).into(backgroundImageView)
     }
 
     private fun initAnimators() {

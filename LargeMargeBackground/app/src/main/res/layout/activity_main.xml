@@ -1,27 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/root"
+    android:id="@+id/background_root"
     android:layout_width="800dp"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
-    android:gravity="center"
-    android:orientation="horizontal"
-    android:background="@drawable/homestead"
-    android:foreground="@drawable/curtain_foreground">
+    android:layout_gravity="center">
 
     <ImageView
-        android:id="@+id/curtain_left"
-        android:layout_width="0dp"
+        android:id="@+id/background_image"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:src="@drawable/curtain_left"/>
+        android:layout_gravity="center"
+        android:scaleType="fitCenter"/>
 
-    <ImageView
-        android:id="@+id/curtain_right"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:id="@+id/root"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:src="@drawable/curtain_right"/>
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:foreground="@drawable/curtain_foreground">
 
-</LinearLayout>
+        <ImageView
+            android:id="@+id/curtain_left"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@drawable/curtain_left"/>
+
+        <ImageView
+            android:id="@+id/curtain_right"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@drawable/curtain_right"/>
+
+    </LinearLayout>
+</FrameLayout>
