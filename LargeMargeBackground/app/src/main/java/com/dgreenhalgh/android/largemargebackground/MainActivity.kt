@@ -9,7 +9,6 @@ import android.media.SoundPool
 import android.os.Bundle
 import android.util.Log
 import android.view.animation.AccelerateDecelerateInterpolator
-import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
 import com.squareup.picasso.Picasso
@@ -157,7 +156,6 @@ class MainActivity : Activity() {
     }
 
     private fun initCloseCurtainLeftAnimator(): ObjectAnimator {
-        var curtainLeftStart = curtainLeftImageView.left.toFloat()
         var curtainLeftAnimator = ObjectAnimator
                 .ofFloat(curtainLeftImageView, "x", -1000f, 0f)
                 .setDuration(3000)
@@ -168,8 +166,6 @@ class MainActivity : Activity() {
     }
 
     private fun initCloseCurtainRightAnimator(): ObjectAnimator {
-        var curtainRightStart = curtainRightImageView.left.toFloat()
-        var curtainRightEnd = (backgroundView.right - curtainRightImageView.width).toFloat()
         var curtainRightAnimator = ObjectAnimator
                 .ofFloat(curtainRightImageView, "x", 1600f, 800f)
                 .setDuration(3000)
