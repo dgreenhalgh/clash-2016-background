@@ -14,24 +14,22 @@
         android:layout_gravity="center"
         android:scaleType="fitCenter"/>
 
-    <!-- TODO: Add signpost background -->
-    <!-- TODO: Position properly -->
-    <FrameLayout
+    <TextView
+        android:id="@+id/signpost_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="450dp"
-        android:layout_marginTop="330dp"
-        android:background="#000">
+        android:layout_marginTop="320dp"
+        android:layout_gravity="right"
+        android:paddingLeft="24dp"
+        android:paddingRight="88dp"
+        android:gravity="center_vertical"
+        android:singleLine="true"
+        android:textSize="40sp"
+        android:background="@drawable/sign"
+        fontPath="fonts/NotoSerif-Regular.ttf"
+        tools:text= "Atlanta, Georgia"
+        tools:ignore="MissingPrefix"/>
 
-        <TextView
-            android:id="@+id/signpost_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:textSize="40sp"
-            tools:text= "Atlanta, Georgia"/>
-
-    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/root"

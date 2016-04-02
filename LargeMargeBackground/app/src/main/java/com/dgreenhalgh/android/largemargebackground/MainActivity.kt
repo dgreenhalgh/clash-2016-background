@@ -3,6 +3,7 @@ package com.dgreenhalgh.android.largemargebackground
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.app.Activity
+import android.content.Context
 import android.content.res.AssetManager
 import android.media.AudioManager
 import android.media.SoundPool
@@ -23,6 +24,7 @@ import rx.schedulers.Schedulers
 import java.io.IOException
 import okhttp3.logging.HttpLoggingInterceptor
 import rx.Observable
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper
 
 class MainActivity : Activity() {
 
@@ -76,6 +78,10 @@ class MainActivity : Activity() {
         assetManager = assets
         soundPool = SoundPool(10, AudioManager.STREAM_MUSIC, 0)
         loadShortSounds()
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase))
     }
 
     private fun initRetrofit() {
