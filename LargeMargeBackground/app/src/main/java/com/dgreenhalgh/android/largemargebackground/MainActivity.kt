@@ -64,7 +64,7 @@ class MainActivity : Activity() {
         curtainRightImageView = findViewById(R.id.curtain_right) as ImageView
 
         backgroundImageView.setOnClickListener {
-            closeem() // TODO: handle on reset
+            closeCurtains() // TODO: handle on reset
         }
 
         initOpenAnimators()
@@ -200,7 +200,7 @@ class MainActivity : Activity() {
         return socket
     }
 
-    private fun closeem() {
+    private fun closeCurtains() {
         Observable.just("")
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .subscribe {
@@ -221,7 +221,10 @@ class MainActivity : Activity() {
             Log.i(TAG, "NEW MESSAGE: " + it.toString())
         })
 
-        // TODO: on restart close curtains
+        channel.on("reset", {
+            closeCurtains()
+            Log.i(TAG, "RESETTING: " + it.toString())
+        })
 
         channel.on("location", {
             Log.i(TAG, "NEW LOCATION" + it.toString())
