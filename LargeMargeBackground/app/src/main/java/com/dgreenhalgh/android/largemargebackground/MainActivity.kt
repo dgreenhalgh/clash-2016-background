@@ -11,20 +11,16 @@ import android.util.Log
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
-import com.bumptech.glide.Glide
+import com.squareup.picasso.Picasso
 import okhttp3.OkHttpClient
 import org.phoenixframework.channels.Socket
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import rx.android.schedulers.AndroidSchedulers
-import rx.functions.Action1
 import rx.schedulers.Schedulers
 import java.io.IOException
 import okhttp3.logging.HttpLoggingInterceptor
-import org.json.JSONObject
-import rx.functions.Func1
-
 
 class MainActivity : Activity() {
 
@@ -58,11 +54,6 @@ class MainActivity : Activity() {
         initRetrofit()
         gettyService = retrofit.create(GettyService::class.java)
 
-        curtainLeftImageView.setOnClickListener({
-
-
-        })
-
         var socket = connectToSocket()
         joinChannel(socket)
 
@@ -88,7 +79,7 @@ class MainActivity : Activity() {
     }
 
     private fun loadBackgroundImage(query: String) {
-        gettyService.listGettyImages("display_set", 1, query)
+        gettyService.listGettyImages("display_set", 1, query, "none")
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(GettyResponse::imageList)
@@ -103,7 +94,7 @@ class MainActivity : Activity() {
     }
 
     private fun changeBackgroundImage(uri: String) {
-        Glide.with(this).load(uri).into(backgroundImageView)
+        Picasso.with(this).load(uri).into(backgroundImageView)
     }
 
     private fun animateCurtains() {

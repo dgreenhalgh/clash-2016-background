@@ -11,5 +11,6 @@ public interface GettyService {
     @GET("search/images")
     Observable<GettyResponse> listGettyImages(@Query("fields") String fields,
                                                 @Query("page_size") int pageSize,
-                                                @Query("phrase") String location);
+                                                @Query("phrase") String location,
+                                                @Query("number_of_people") String numPeople);
 }
