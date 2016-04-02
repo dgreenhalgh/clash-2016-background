@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/background_root"
     android:layout_width="800dp"
     android:layout_height="match_parent"
@@ -12,6 +13,24 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:scaleType="fitCenter"/>
+
+    <!-- TODO: Add signpost background -->
+    <!-- TODO: Position properly -->
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="#000">
+
+        <TextView
+            android:id="@+id/signpost_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:textSize="24sp"
+            tools:text= "Atlanta, Georgia"/>
+
+    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/root"

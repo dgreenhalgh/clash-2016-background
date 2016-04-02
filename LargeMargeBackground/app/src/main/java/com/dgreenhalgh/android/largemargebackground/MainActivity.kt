@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import com.squareup.picasso.Picasso
 import okhttp3.OkHttpClient
 import org.phoenixframework.channels.Socket
@@ -30,6 +31,7 @@ class MainActivity : Activity() {
 
     private lateinit var backgroundView: LinearLayout
     private lateinit var backgroundImageView: ImageView
+    private lateinit var signpostTextView: TextView
     private lateinit var curtainLeftImageView: ImageView
     private lateinit var curtainRightImageView: ImageView
 
@@ -55,6 +57,7 @@ class MainActivity : Activity() {
 
         backgroundView = findViewById(R.id.root) as LinearLayout
         backgroundImageView = findViewById(R.id.background_image) as ImageView
+        signpostTextView = findViewById(R.id.signpost_text) as TextView
         curtainLeftImageView = findViewById(R.id.curtain_left) as ImageView
         curtainRightImageView = findViewById(R.id.curtain_right) as ImageView
 
@@ -89,6 +92,15 @@ class MainActivity : Activity() {
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                 .build()
+    }
+
+    private fun setLocationSignpostText(location: String) {
+        Observable.just("")
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    signpostTextView.text = location
+
+                }
     }
 
     private fun loadBackgroundImage(query: String) {
@@ -209,6 +221,7 @@ class MainActivity : Activity() {
             Log.i(TAG, "NEW LOCATION" + it.toString())
             var query = it.payload.get("location").toString()
             Log.i(TAG, "LOCATION QUERY " + query)
+            setLocationSignpostText(query)
             loadBackgroundImage(query)
         })
 
